@@ -1,5 +1,8 @@
 {-# LANGUAGE DeriveFunctor #-}
-module TypeTacToe where
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE KindSignatures #-}
+
+module TypeTacToeWithDK where
 
 -- | Either X, O or Nothing
 data PieceT = X | O | N
@@ -8,10 +11,10 @@ data PieceT = X | O | N
 data Trip a = Trip a a a
   deriving (Show, Eq, Functor)
 
-newtype Board a = Board (Trip (Trip a))
+newtype Board (t :: PieceT) a = Board (Trip (Trip a))
   deriving (Show, Eq, Functor)
 
-newBoard :: Board PieceT
+newBoard :: Board 'X PieceT
 newBoard = Board $ Trip (Trip N N N)
                         (Trip N N N)
                         (Trip N N N)
@@ -26,6 +29,9 @@ overTrip A f (Trip a b c) = Trip (f a) b c
 overTrip B f (Trip a b c) = Trip a (f b) c
 overTrip C f (Trip a b c) = Trip a b (f c)
 
-play :: PieceT -> (CoordT, CoordT) -> Board PieceT -> Board PieceT
-play p (x, y) (Board b) = Board $ overTrip y (overTrip x (const p)) b
+playX :: (CoordT, CoordT) -> Board 'X PieceT -> Board 'O PieceT
+playX (x, y) (Board b) = Board $ overTrip y (overTrip x (const X)) b
+
+playO :: (CoordT, CoordT) -> Board 'O PieceT -> Board 'X PieceT
+playO (x, y) (Board b) = Board $ overTrip y (overTrip x (const O)) b
 
