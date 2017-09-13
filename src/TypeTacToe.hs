@@ -1,6 +1,8 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE GADTS #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module TypeTacToeWithDK where
 
@@ -11,16 +13,32 @@ data PieceT = X | O | N
 data Trip a = Trip a a a
   deriving (Show, Eq, Functor)
 
-newtype Board (t :: PieceT) a = Board (Trip (Trip a))
+-- | Keep a list of each Piece played and its location
+data BoardRep = Empty
+              | Cons CoordT CoordT PieceT BoardRep
+
+newtype Board (b :: BoardRep) a = Board (Trip (Trip a))
   deriving (Show, Eq, Functor)
 
-newBoard :: Board 'X PieceT
+newBoard :: Board 'Empty PieceT
 newBoard = Board $ Trip (Trip N N N)
                         (Trip N N N)
                         (Trip N N N)
 
 data CoordT = A | B | C
   deriving (Show, Eq)
+
+-- | A proxy type which represents a coordinate
+data Coord (a :: CoordT) where
+  A' :: Coord 'A
+  B' :: Coord 'B
+  C' :: Coord 'C
+
+-- | Get the coord's actual value from a wrapper type
+coordVal :: Coord a -> CoordT
+coordVal A' = A
+coordVal B' = B
+coordVal C' = C
 
 -- | Utility function to alter a value inside a triple
 -- Can set values using `const x`
@@ -29,9 +47,12 @@ overTrip A f (Trip a b c) = Trip (f a) b c
 overTrip B f (Trip a b c) = Trip a (f b) c
 overTrip C f (Trip a b c) = Trip a b (f c)
 
-playX :: (CoordT, CoordT) -> Board 'X PieceT -> Board 'O PieceT
-playX (x, y) (Board b) = Board $ overTrip y (overTrip x (const X)) b
+playX :: (Coord x, Coord y) -> Board b PieceT -> Board ('Cons x y 'X b) PieceT
+playX (coordVal -> x, coordVal -> y) (Board b) 
+  = Board $ overTrip y (overTrip x (const X)) b
 
-playO :: (CoordT, CoordT) -> Board 'O PieceT -> Board 'X PieceT
-playO (x, y) (Board b) = Board $ overTrip y (overTrip x (const O)) b
+playO :: (Coord x, Coord y) -> Board b PieceT -> Board ('Cons x y 'O b) PieceT
+playO (coordVal -> x, coordVal -> y) (Board b)
+  = Board $ overTrip y (overTrip x (const O)) b
+
 
