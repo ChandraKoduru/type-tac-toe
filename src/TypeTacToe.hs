@@ -1,10 +1,11 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE GADTS #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TypeFamilies #-}
 
-module TypeTacToeWithDK where
+module TypeTacToe where
 
 -- | Either X, O or Nothing
 data PieceT = X | O | N
@@ -47,11 +48,17 @@ overTrip A f (Trip a b c) = Trip (f a) b c
 overTrip B f (Trip a b c) = Trip a (f b) c
 overTrip C f (Trip a b c) = Trip a b (f c)
 
-playX :: (Coord x, Coord y) -> Board b PieceT -> Board ('Cons x y 'X b) PieceT
+-- | Has a square been played already ?
+type family Played (x :: CoordT) (y :: CoordT) (b :: BoardRep) :: Bool where
+  Played _ _ 'Empty = 'False
+  Played x y ('Cons x y _ _) = 'True
+  Played x y ('Cons _ _ _ rest) = Played x y rest
+
+playX :: (Played x y b ~ 'False) => (Coord x, Coord y) -> Board b PieceT -> Board ('Cons x y 'X b) PieceT
 playX (coordVal -> x, coordVal -> y) (Board b) 
   = Board $ overTrip y (overTrip x (const X)) b
 
-playO :: (Coord x, Coord y) -> Board b PieceT -> Board ('Cons x y 'O b) PieceT
+playO :: (Played x y b ~ 'False) => (Coord x, Coord y) -> Board b PieceT -> Board ('Cons x y 'O b) PieceT
 playO (coordVal -> x, coordVal -> y) (Board b)
   = Board $ overTrip y (overTrip x (const O)) b
 
