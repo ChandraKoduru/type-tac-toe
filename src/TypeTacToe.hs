@@ -4,6 +4,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module TypeTacToe where
 
@@ -81,3 +82,9 @@ game2 = newBoard & playX (A', B') & playO (A', C')
 
 -- playing into an occupied cell. When un-commented, the module will not compile
 -- game4 = newBoard & playX (A', B') & playO (A', B')
+
+main :: IO ()
+main = do
+  print (show game1)
+  print ("O-making move")
+  print (show (game1 & playO (A', C')))

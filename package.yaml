@@ -8,5 +8,6 @@ dependencies:
 executables:
   type-tac-toe:
     source-dirs: src
-    main: Main.hs 
+    main: TypeTacToe.hs 
+    ghc-options: -main-is TypeTacToe
 
